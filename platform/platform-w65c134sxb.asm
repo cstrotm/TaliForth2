@@ -23,7 +23,7 @@
 ; have to be changed as well
 
 
-;    $0080  +-------------------+  ram_start, zpage, user0
+;    $00B3  +-------------------+  ram_start, zpage, user0
 ;           |  User varliables  |
 ;           +-------------------+
 ;           |                   |
@@ -73,8 +73,8 @@
 
 .alias ram_start $0000          ; start of installed 32 KiB of RAM
 .alias ram_end   $2900-1        ; end of free RAM
-.alias zpage     ram_start+$80  ; begin of free Zero Page ($0080-$00ff)
-.alias zpage_end $ff            ; end of free Zero Page ($0080-$00ff)	
+.alias zpage     ram_start+$B3  ; begin of free Zero Page ($00b3-$00ff)
+.alias zpage_end $ff            ; end of free Zero Page ($00b3-$00ff)	
 .alias stack0    $0100          ; begin of Return Stack ($0100-$01ff)
 .alias hist_buff ram_end-$03ff  ; begin of history buffers
 
@@ -185,16 +185,7 @@ nolf:
 ; is easier to see where the kernel ends in hex dumps. This string is
 ; displayed after a successful boot
 s_kernel_id:
-        .byte AscCR, AscCR, "Tali Forth 2 default kernel for W65C134SXB (01.07.2019)", AscCR, 0
-debug:
-	pha
-	phx
-	phy
-	lda #$2a 		; '*'
-	jsr outch
-	ply
-	plx
-	pla
-	rts
+        .byte AscCR, AscCR, "Tali Forth 2 default kernel for W65C134SXB (14.07.2019)", AscCR, 0
+	
 _taliend:	NOP
 ; END
