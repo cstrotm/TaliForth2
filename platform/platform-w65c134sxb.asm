@@ -23,7 +23,7 @@
 ; have to be changed as well
 
 
-;    $0040  +-------------------+  ram_start, zpage, user0
+;    $0080  +-------------------+  ram_start, zpage, user0
 ;           |  User varliables  |
 ;           +-------------------+
 ;           |                   |
@@ -32,7 +32,7 @@
 ;           |                   |
 ;           |  ^  Data Stack    |
 ;           |  |                |
-;    $0078  +-------------------+  dsp0, stack
+;    $00F8  +-------------------+  dsp0, stack
 ;           |                   |
 ;           |   (Reserved for   |
 ;           |      kernel)      |
@@ -73,7 +73,8 @@
 
 .alias ram_start $0000          ; start of installed 32 KiB of RAM
 .alias ram_end   $2900-1        ; end of free RAM
-.alias zpage     ram_start+$40  ; begin of free Zero Page ($0040-$00ff)
+.alias zpage     ram_start+$80  ; begin of free Zero Page ($0080-$00ff)
+.alias zpage_end $ff            ; end of free Zero Page ($0080-$00ff)	
 .alias stack0    $0100          ; begin of Return Stack ($0100-$01ff)
 .alias hist_buff ram_end-$03ff  ; begin of history buffers
 
@@ -143,16 +144,22 @@ _done:
                 jmp forth
 .scend
 
+.alias RD_CHAR   $F006		; W65C134 Monitor Read-Char subroutine
 kernel_getc:
 
 .scope
-.alias RD_CHAR   $F006		; W65C134 Monitor Read-Char subroutine
 
+	phx
+	phy
 _loop:
-                jsr RD_CHAR
-                beq _loop
+        jsr RD_CHAR
+	cmp #00
+        beq _loop
 _exit:
-                rts
+	and #$7F
+	ply
+	plx
+        rts
 .scend
 
 .scope
@@ -162,8 +169,16 @@ kernel_putc:
                                 ; """Print a single character to the console.
                                 ; """
 
-  jsr OUTCH			; write out char
-  rts
+	cmp #AscLF			; Line feet?
+	bne nolf
+	lda #AscCR			; change to carriage return
+nolf:
+	phx
+	phy
+	jsr OUTCH			; write out char
+	ply
+	plx
+	rts
 .scend
 
 ; Leave the following string as the last entry in the kernel routine so it
@@ -171,6 +186,15 @@ kernel_putc:
 ; displayed after a successful boot
 s_kernel_id:
         .byte AscCR, AscCR, "Tali Forth 2 default kernel for W65C134SXB (01.07.2019)", AscCR, 0
-
+debug:
+	pha
+	phx
+	phy
+	lda #$2a 		; '*'
+	jsr outch
+	ply
+	plx
+	pla
+	rts
 _taliend:	NOP
 ; END
